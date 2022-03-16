@@ -25,12 +25,16 @@ SECRET_KEY = 'django-insecure-$c9i%_u+$ak0#)o@@cb&ef%o@sd^*3!#7b!!my4^xu93p0fsva
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'tg_food_plan_bot.apps.TgFoodPlanBotConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
