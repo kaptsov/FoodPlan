@@ -2,8 +2,14 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater, CallbackQueryHandler, CallbackContext, ConversationHandler
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
+                      KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove,
+                      Update)
+from telegram.ext import (CallbackContext, CallbackQueryHandler,
+                          CommandHandler, ConversationHandler, Filters,
+                          MessageHandler, Updater)
+
+from tg_food_plan_bot.models import Customer
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -19,7 +25,29 @@ logger = logging.getLogger(__name__)
 
 
 def get_stored_user(tg_user_id: int):
-    return
+    try:
+        customer = Customer.objects.get(telegram_id=tg_user_id)
+        stored_user_description = {
+            "tg_user_id": tg_user_id,
+            "full_name": customer.name,
+            "phone_number": customer.phone_number,
+            "db_object": customer
+        }
+        print(stored_user_description)
+        return stored_user_description
+    except Customer.DoesNotExist:
+        return
+
+
+def save_new_user(user_description: dict) -> dict:
+    customer = Customer.objects.create(
+        telegram_id=user_description["tg_user_id"],
+        name=user_description["full_name"],
+        phone_number=user_description["phone_number"],
+    )
+    customer.save()
+    user_description["db_object"] = customer
+    return user_description
 
 
 def say_hello_new_user(update: Update, context: CallbackContext):
@@ -91,8 +119,7 @@ def get_phone(update: Update, context: CallbackContext):
 
 
 def finish_registration(update: Update, context: CallbackContext):
-    # todo Записать нового пользователя в БД
-    print(context.user_data)
+    context.user_data = save_new_user(context.user_data)
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Регистрация прошла успешно",
@@ -105,6 +132,7 @@ def start(update: Update, context: CallbackContext):
     user = update.effective_user
     stored_user = get_stored_user(user.id)
     if not stored_user:
+        context.user_data["tg_user_id"] = user.id
         context.user_data["full_name"] = user.full_name
         return say_hello_new_user(update, context)
 
