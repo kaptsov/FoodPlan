@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Customers(models.Model):
     username = models.CharField(max_length=25, verbose_name = 'Имя')
     phone_number = models.CharField(max_length=30, verbose_name = "Телефон")
@@ -48,11 +47,3 @@ class RecipeIngredients(models.Model):
     ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
     ingredient_amount = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Количество ингредиента")
     ingredient_measure = models.CharField(max_length=30, verbose_name="Единица измерения")
-
-
-
-
-
-
-
-
