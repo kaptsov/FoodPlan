@@ -10,7 +10,7 @@ from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
 from telegram.ext import (CallbackContext, CallbackQueryHandler,
                           CommandHandler, ConversationHandler, Filters,
                           MessageHandler, Updater)
-from tg_food_plan_bot.models import Customers
+from tg_food_plan_bot.models import Customer
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -41,7 +41,7 @@ def start(update: Update, context: CallbackContext):
 
 def get_stored_user(tg_user_id: int):
     try:
-        customer = Customers.objects.get(telegram_id=tg_user_id)
+        customer = Customer.objects.get(telegram_id=tg_user_id)
         stored_user_description = {
             "tg_user_id": tg_user_id,
             "full_name": customer.username,
@@ -50,7 +50,7 @@ def get_stored_user(tg_user_id: int):
         }
         print(stored_user_description)
         return stored_user_description
-    except Customers.DoesNotExist:
+    except Customer.DoesNotExist:
         return None
 
 
@@ -68,7 +68,7 @@ def say_hello_new_user(update: Update, context: CallbackContext):
 
 
 def save_new_user(user_description: dict) -> dict:
-    customer = Customers.objects.create(
+    customer = Customer.objects.create(
         telegram_id=user_description["tg_user_id"],
         username=user_description["full_name"],
         phone_number=user_description["phone_number"],
