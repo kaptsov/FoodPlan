@@ -35,7 +35,11 @@ def start(update: Update, context: CallbackContext):
         return SELECT_ACTION
 
     context.user_data.update(stored_user)
-    say_welcome(update, context)
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"{context.user_data['full_name']}, добро пожаловать!"
+    )
+    ask_main_action(update, context)
     return SELECT_ACTION
 
 
@@ -78,8 +82,8 @@ def save_new_user(user_description: dict) -> dict:
     return user_description
 
 
-def say_welcome(update: Update, context: CallbackContext):
-    text = f"{context.user_data['full_name']}, добро пожаловать!"
+def ask_main_action(update: Update, context: CallbackContext):
+    text = "Выберите действие"
     button_list = [
         [
             InlineKeyboardButton("Оформить подписку",
@@ -120,7 +124,7 @@ def share_contact(update: Update, context: CallbackContext):
     if update.message.contact:
         context.user_data["phone_number"] = update.message.contact.phone_number
     finish_registration(update, context)
-    say_welcome(update, context)
+    ask_main_action(update, context)
     return SELECT_ACTION
 
 
@@ -131,7 +135,7 @@ def get_phone(update: Update, context: CallbackContext):
 
     context.user_data["phone_number"] = update.message.text
     finish_registration(update, context)
-    say_welcome(update, context)
+    ask_main_action(update, context)
     return SELECT_ACTION
 
 
@@ -180,19 +184,56 @@ def handle_select_action(update: Update, context: CallbackContext):
     elif response == "select_subscript":
         return ConversationHandler.END
     elif response[:6] == "period":
-        context.user_data["subscript_period"] = int(response[7:])
+        context.chat_data["subscript_period"] = int(response[7:])
         query.edit_message_text(text=f"Подписка на {response[7:]} мес.")
         ask_menu_type(update, context)
         return SELECT_ACTION
     elif response[:4] == "menu":
-        query.edit_message_text(text=f"Выбрано меню: {response[5:]}")
+        menu_description = response.split("_", 3)
+        context.chat_data["subscript_menu_id"] = int(menu_description[1])
+        query.edit_message_text(text=f"Выбрано меню: {menu_description[2]}")
         context.bot.send_message(
             chat_id=update.effective_chat.id, text="Напишите число персон")
         return INPUT_PERSONS
+    elif response == "subscript_pay":
+        save_subscription(context)
+        ask_main_action(update, context)
+        return SELECT_ACTION
+    elif response == "subscript_cancel":
+        context.bot.send_message(
+            chat_id=update.effective_chat.id, text="Оформление подписки отменено")
+        ask_main_action(update, context)
+        return SELECT_ACTION
+
+
+def save_subscription(context: CallbackContext):
+    pass
 
 
 def get_persons(update: Update, context: CallbackContext):
-    say_welcome(update, context)
+    if not update.message.text:  # todo добавить проверку валидности
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Напишите число персон"
+        )
+        return INPUT_PERSONS
+
+    context.chat_data["subscript_persons"] = int(update.message.text)
+    text = f"Завершение оформления"
+    button_list = [
+        [
+            InlineKeyboardButton("Оплатить",
+                                 callback_data="subscript_pay"),
+            InlineKeyboardButton("Отменить",
+                                 callback_data="subscript_cancel"),
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(button_list)
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=text,
+        reply_markup=reply_markup
+    )
     return SELECT_ACTION
 
 
@@ -201,15 +242,15 @@ def ask_menu_type(update: Update, context: CallbackContext):
     button_list = [
         [
             InlineKeyboardButton("Классическое",
-                                 callback_data="menu_1"),
+                                 callback_data="menu_1_Классическое"),
             InlineKeyboardButton("Вегетарианское",
-                                 callback_data="menu_2"),
+                                 callback_data="menu_2_Вегетарианское"),
         ],
         [
             InlineKeyboardButton("Низкоуглеводное",
-                                 callback_data="menu_3"),
+                                 callback_data="menu_3_Низкоуглеводное"),
             InlineKeyboardButton("Кето",
-                                 callback_data="menu_4"),
+                                 callback_data="menu_4_Кето"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(button_list)
