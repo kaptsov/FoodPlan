@@ -26,8 +26,17 @@ python manage.py createsuperuser
 ```
 python manage.py runserver
 ```
+
+либо
+
+```
+python main.py
+```
+
 2. Перейти по адресу http://127.0.0.1:8000/admin/
 ---
+
+
 
 ## Запуск бота
 ```
