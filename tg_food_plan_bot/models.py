@@ -6,9 +6,23 @@ class Customer(models.Model):
     phone_number = models.CharField(max_length=30, verbose_name="Телефон")
     telegram_id = models.PositiveIntegerField(verbose_name="ID пользователя в телеграмме", unique=True)
 
+    class Meta:
+        verbose_name = "Клиент"
+        verbose_name_plural = "Клиенты"
+
+    def __str__(self):
+        return self.username
+
 
 class Preference(models.Model):
     type = models.CharField(max_length=30, verbose_name="Предпочтение")
+
+    class Meta:
+        verbose_name = "Предпочтение"
+        verbose_name_plural = "Предпочтения"
+
+    def __str__(self):
+        return self.type
 
 
 class Subscription(models.Model):
@@ -18,14 +32,28 @@ class Subscription(models.Model):
     person_amount = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name="Количество персон")
     preferences = models.ForeignKey(Preference, on_delete=models.CASCADE, verbose_name="Предпочтение")
 
+    class Meta:
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+
+    def __str__(self):
+        return f'{self.owner} - {self.person_amount}'
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=30, verbose_name="Название ингредиента")
+
+    class Meta:
+        verbose_name = "Ингредиент"
+        verbose_name_plural = "Ингредиенты"
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):
     name = models.CharField(max_length=30, verbose_name="Название блюда")
     description = models.TextField()
+    image = models.ImageField()
     preferences = models.ManyToManyField(
         Preference,
         through="RecipeClassificator",
@@ -36,6 +64,13 @@ class Recipe(models.Model):
         through="RecipeIngredient",
         through_fields=("recipe", "ingredient"),
         )
+
+    class Meta:
+        verbose_name = "Рецепт"
+        verbose_name_plural = "Рецепты"
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeClassificator(models.Model):
